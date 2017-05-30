@@ -6,14 +6,19 @@
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
-    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
 </head>
+<body>
+
 <style>
 .map-overlay {
     font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
     position: absolute;
     width: 25%;
-    top: 15%;
+    top: 0;
     left: 0;
     padding: 10px;
 }
@@ -46,40 +51,134 @@
     margin: 0;
     cursor: ew-resize;
 }
+
+h3 {
+float:left;
+margin: 1%;
+padding: 1%;
+padding-left:1.5%;
+padding-right:1.5%;
+font: 18px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+background: rgba(255, 255, 255, 0.7);
+display: block;
+}
+
 </style>
-<body>
-<!-- <nav id="menu"> </nav> -->
 
+<div id='map'></div>
 
-<div id="map"></div>
 <div class='map-overlay top'>
     <div class='map-overlay-inner'>
-        <label id='month'></label>
+        <h2>Opal Card Tap On/Off</h2>
+        <label id='time'></label>
         <input id='slider' type='range' min='0' max='11' step='1' value='0' />
     </div>
+    <h3>
+<a href="index.html">Context</a><br>
+<a href="traffic.html">Traffic</a><br>
+<a href="opal.html">Opal</a>
+</h3>
 </div>
 
 <script src='//d3js.org/d3.v3.min.js' charset='utf-8'></script>
-<script src="script_opal.js"></script>
-<h1>
-Traffic
-</h1>
-<content>
-<h2>
-<a href="index.html"> Context </a>
-<a href="traffic.html"> Traffic </a> 
-<a href="opal.html"> Opal </a>
-</h2> 
-<!-- <div id="drop_zone">Drop Building</div> -->
-<!-- <output id="list"></output> -->
-<!-- <button type="button" class="btn" id="remove" onclick="removeButton()"> Remove Building </button> -->
-<!-- <div class="w3-bar">
-  <button class="w3-button w3-teal" href="www.facebook.com">Context</button>
-  <button class="w3-button w3-teal" href="www.google.com">Traffic</button>
-  <button class="w3-button w3-teal" href="www.youtube.com">Opal</button>
-</div> -->
-  <nav id='filter-group' class='filter-group'></nav>
-</content>
-<!-- <script src="dragndrop.js"></script> -->
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFkZWxlaW5lam9oYW5zb24iLCJhIjoiY2lzczduYzJ4MDZrODJucGh0Mm1xbmVxNCJ9.i7q4iT8FFgh_y5v4we5UhQ';
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v9',
+    center: [151.104433, -33.918212],
+    zoom: 12,
+    pitch: 15,
+    bearing: 0
+});
+
+var times = [
+    '2:00 pm',
+    '2:30 pm',
+    '3:00 pm',
+    '3:30 pm',
+    '4:00 pm',
+    '4:30 pm',
+    '5:00 pm',
+    '5:30 pm',
+    '6:00 pm',
+    '6:30 pm',
+    '7:00 pm',
+    '7:30 pm'
+];
+
+function filterBy(time) {
+
+    var filters = ['==', 'time', time.toString()];
+    map.setFilter('opal_circles', filters);
+    console.log(time)
+
+    // Set the label to the time
+    document.getElementById('time').textContent = times[time];
+}
+
+map.on('load', function() {
+
+    // Data courtesy of http://earthquake.usgs.gov/
+    // Query for significant earthquakes in 2015 URL request looked like this:
+    // http://earthquake.usgs.gov/fdsnws/event/1/query
+    //    ?format=geojson
+    //    &starttime=2015-01-01
+    //    &endtime=2015-12-31
+    //    &minmagnitude=6'
+    //
+    // Here we're using d3 to help us make the ajax request but you can use
+    // Any request method (library or otherwise) you wish.
+    d3.json('/GeoJSON/opal_slider1.GeoJSON', function(err, data) {
+        if (err) throw err;
+
+        // Create a time property value based on time
+        // used to filter against.
+        // data.features = data.features.map(function(d) {
+        //     d.properties.time = new Date(d.properties.time).getTime();
+        //     return d;
+        // });
+
+        map.addSource('opal', {
+            'type': 'geojson',
+            'data': data
+        });
+        console.log(data)
+        console.log('source added')
+        console.log(data.features)
+
+        map.addLayer({
+            'id': 'opal_circles',
+            'type': 'fill-extrusion',
+            'source': 'opal',
+            'paint': {
+              'fill-extrusion-color' : {
+                    'property': 'colour',
+                    'type': 'identity'
+                },
+                'fill-extrusion-height' : {
+                    'type': 'identity',
+                    'property': 'height'
+                },
+                'fill-extrusion-base' : {
+                    'type': 'identity',
+                    'property': 'base_height'
+                }
+            } 
+        })
+        // console.log(data.features.properties.time)
+        // Set filter to first time of the year
+        // 0 = January
+        filterBy(0);
+
+        document.getElementById('slider').addEventListener('input', function(e) {
+            var time = parseInt(e.target.value, 10);
+            console.log(time)
+            filterBy(time);
+        });
+    });
+});
+</script>
+
 </body>
 </html>

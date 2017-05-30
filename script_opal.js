@@ -15,7 +15,7 @@ map.on('load', function() {
 
     map.addSource('json-buildings', {
                     'type': 'geojson',
-                    'data': './GeoJSON/tower_1.GeoJSON'
+                    'data': '/GeoJSON/walkability_trains.GeoJSON'
                 }),
 
     map.addLayer({

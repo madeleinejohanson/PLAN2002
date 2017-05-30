@@ -63,12 +63,12 @@ var filterGroup = document.getElementById('filter-group');
        
         buttonVals = new Set([])
 
-        function tagGetter(feature){
-            tagVal = feature["properties"]["tag"]
-            buttonVals.add(tagVal) //set
+        function layerGetter(feature){
+            layerVal = feature["properties"]["layer"]
+            buttonVals.add(layerVal) //set
         }
 
-        dropped_building.features.forEach(tagGetter)
+        dropped_building.features.forEach(layerGetter)
 
         buttonMenu = Array.from(buttonVals) //iterator 
 
@@ -104,7 +104,7 @@ var filterGroup = document.getElementById('filter-group');
           hiddenElements.forEach((element) => {
           hiddenFilters.push([
             '==',
-            'tag',
+            'layer',
             element.toString()
                 ]);
           });
@@ -112,24 +112,26 @@ var filterGroup = document.getElementById('filter-group');
           map.setFilter( 'fromdragndrop', hiddenFilters);
             
 
-map.on('click', function (e) {
-    var features = map.queryRenderedFeatures(e.point, { layers: [ 'fromdragndrop'] });
-    if (!features.length) {
+        // When a click event occurs near a polygon, open a popup at the location of
+      // the feature, with description HTML from its properties.
+      map.on('click', function (e) {
+      var features = map.queryRenderedFeatures(e.point, { layers: [ "fromdragndrop"] });
+       if (!features.length) {
         return;
-    }
+      }
 
     var feature = features[0];
     var feat = features.length;
 
     var popup = new mapboxgl.Popup()
         .setLngLat(map.unproject(e.point))
-        .setHTML(feature.properties.tag)
+        .setHTML([feature.properties.layer] + ["<br>"] + [feature.properties.tag])
         .addTo(map);
 
 // Use the same approach as above to indicate that the symbols are clickable
 // by changing the cursor style to 'pointer'.
 map.on('mousemove', function (e) {
-    var features = map.queryRenderedFeatures(e.point, { layers: [ 'fromdragndrop'] });
+    var features = map.queryRenderedFeatures(e.point, { layers: [ "fromdragndrop"] });
     map.getCanvas().style.cursor = feat ? 'pointer' : '';
 });
 });
